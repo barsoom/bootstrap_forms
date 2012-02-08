@@ -69,12 +69,12 @@ See description above...
 = f.collection_radio_buttons :primary_category_id, Category.all, :id, :name
 ```
 
-Uneditable Field
+Uneditable Input
 ----------------
-Bootstrap Forms adds another helper method that generates the necessary markup for uneditable fields:
+Bootstrap Forms adds another helper method that generates the necessary markup for uneditable inputs:
 
 ```haml
-= f.uneditable_field :name
+= f.uneditable_input :name
 ```
 
 yields:
@@ -155,6 +155,22 @@ You can add as many options to any form helper tag. If they are interpreted by B
     <td>= f.text_field :name, :append => '@'</td>
   </tr>
 </table>
+
+Internationalization/Custom Errors
+----------------------------------
+As of `1.0.2`, `bootstrap_forms` supports I18n! More support is being added, but you can change the error header and cancel button like this:
+
+```yaml
+# config/locales/en.yml
+en:
+  bootstrap_forms:
+    errors:
+      header: 'Your %{model} is wrong!'
+    buttons:
+      cancel: 'Forget it!'
+```
+
+Obviously you can also change to a different `lang.yml` file and use the same syntax.
 
 Contributing
 ------------

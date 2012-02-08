@@ -1,12 +1,12 @@
 module BootstrapForms
   class FormBuilder < ActionView::Helpers::FormBuilder
-    delegate :content_tag, :hidden_field_tag, :check_box_tag, :radio_button_tag, :link_to, :to => :@template
+    delegate :content_tag, :hidden_field_tag, :check_box_tag, :radio_button_tag, :button_tag, :link_to, :to => :@template
 
     def error_messages
       if object.errors.full_messages.any?
-        content_tag(:div, :class => 'alert alert-error') do
-          link_to('&times;'.html_safe, '#', {:class => 'close', :data => { :dismiss => "alert" }}) +
-          content_tag(:p, "<strong>Oh snap! You got an error!</strong> Fix the errors below and try again.".html_safe) +
+        content_tag(:div, :class => 'alert alert-block alert-error') do
+          link_to('&times;'.html_safe, '#', {:class => 'close', :data => { :dismiss => 'alert' }}) +
+          content_tag(:h4, I18n.t('bootstrap_forms.errors.header', :model => object.class.model_name.human), :class => 'alert-heading') +
           content_tag(:ul) do
             object.errors.full_messages.map do |message|
               content_tag(:li, message)
@@ -29,7 +29,7 @@ module BootstrapForms
         @options = args.extract_options!
         @args = args
 
-        clearfix_div do
+        control_group_div do
           label_field + input_div do
             extras { super(name, *(@args << @options)) }
           end
@@ -42,10 +42,10 @@ module BootstrapForms
       @options = args.extract_options!
       @args = args
 
-      clearfix_div do
+      control_group_div do
         input_div do
           label(@name, :class => [ 'checkbox', required_class ].compact.join(' ')) do
-            extras { super(name, *(@args << @options)) + object.class.human_attribute_name(name) }
+            extras { super(name, *(@args << @options)) + human_attribute_name }
           end
         end
       end
@@ -56,23 +56,19 @@ module BootstrapForms
       @options = args.extract_options!
       @args = args
 
-      clearfix_div do
-        label_field + input_div do
-          extras do
-            content_tag(:ul, :class => 'inputs-list') do
-              records.collect do |record|
-                element_id = "#{object_name}_#{attribute}_#{record.send(record_id)}"
-                checkbox = check_box_tag("#{object_name}[#{attribute}][]", record.send(record_id), object.send(attribute).include?(record.send(record_id)), :id => element_id)
+      control_group_div do
+        label_field + extras do
+          content_tag(:div, :class => 'controls') do
+            records.collect do |record|
+              element_id = "#{object_name}_#{attribute}_#{record.send(record_id)}"
+              checkbox = check_box_tag("#{object_name}[#{attribute}][]", record.send(record_id), [object.send(attribute)].flatten.include?(record.send(record_id)), @options.merge({:id => element_id}))
 
-                content_tag(:li) do
-                  content_tag(:label) do
-                    checkbox + content_tag(:span, record.send(record_name))
-                  end
-                end
-              end.join('').html_safe
-            end
+              content_tag(:label, :class => ['checkbox', ('inline' if @options[:inline])].compact.join(' ')) do
+                checkbox + content_tag(:span, record.send(record_name))
+              end
+            end.join('').html_safe
           end
-        end + hidden_field_tag("#{object_name}[#{attribute}][]")
+        end
       end
     end
 
@@ -81,32 +77,28 @@ module BootstrapForms
       @options = args.extract_options!
       @args = args
 
-      clearfix_div do
-        label_field + input_div do
-          extras do
-            content_tag(:ul, :class => 'inputs-list') do
-              records.collect do |record|
-                element_id = "#{object_name}_#{attribute}_#{record.send(record_id)}"
-                radiobutton = radio_button_tag("#{object_name}[#{attribute}][]", record.send(record_id), object.send(attribute) == record.send(record_id), :id => element_id)
+      control_group_div do
+        label_field + extras do
+          content_tag(:div, :class => 'controls') do
+            records.collect do |record|
+              element_id = "#{object_name}_#{attribute}_#{record.send(record_id)}"
+              radiobutton = radio_button_tag("#{object_name}[#{attribute}][]", record.send(record_id), object.send(attribute) == record.send(record_id), @options.merge({:id => element_id}))
 
-                content_tag(:li) do
-                  content_tag(:label) do
-                    radiobutton + content_tag(:span, record.send(record_name))
-                  end
-                end
-              end.join('').html_safe
-            end
+              content_tag(:label, :class => ['radio', ('inline' if @options[:inline])].compact.join(' ')) do
+                radiobutton + content_tag(:span, record.send(record_name))
+              end
+            end.join('').html_safe
           end
         end
       end
     end
 
-    def uneditable_field(name, *args)
+    def uneditable_input(name, *args)
       @name = name
       @options = args.extract_options!
       @args = args
 
-      clearfix_div do
+      control_group_div do
         label_field + input_div do
           extras do
             content_tag(:span, :class => 'uneditable-input') do
@@ -125,14 +117,14 @@ module BootstrapForms
       @options[:class] = 'btn btn-primary'
 
       content_tag(:div, :class => 'form-actions') do
-        super(name, *(args << @options)) + ' ' + link_to('Cancel', @options[:back_path] || :back, :class => 'btn cancel')
+        super(name, *(args << @options)) + ' ' + button_tag(I18n.t('bootstrap_forms.buttons.cancel'), :type => 'reset', :class => 'btn cancel')
       end
     end
 
     private
 
-    def clearfix_div(&block)
-      @options[:error] = object.errors[@name].collect{|e| "#{@options[:label] || @name} #{e}".humanize}.join(', ') unless object.errors[@name].empty?
+    def control_group_div(&block)
+      @options[:error] = error_string
 
       klasses = ['control-group']
       klasses << 'error' if @options[:error]
@@ -141,6 +133,19 @@ module BootstrapForms
       klass = klasses.join(' ')
 
       content_tag(:div, :class => klass, &block)
+    end
+
+    def error_string
+      errors = object.errors[@name]
+      if errors.present?
+        errors.map { |e|
+          "#{@options[:label] || human_attribute_name} #{e}"
+        }.join(", ")
+      end
+    end
+
+    def human_attribute_name
+      object.class.human_attribute_name(@name)
     end
 
     def input_div(&block)
