@@ -40,11 +40,12 @@ module BootstrapForms
       @name = name
       @field_options = args.extract_options!
       @args = args
+      label_text = @field_options[:label] || human_attribute_name
 
       control_group_div do
         input_div do
           label(@name, :class => [ 'checkbox', required_class ].compact.join(' ')) do
-            extras { super(name, *(@args << @field_options)) + human_attribute_name }
+            extras { super(name, *(@args << @field_options)) + label_text }
           end
         end
       end
