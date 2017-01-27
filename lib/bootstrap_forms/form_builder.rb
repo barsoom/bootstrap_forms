@@ -193,7 +193,8 @@ module BootstrapForms
         case method_name
         when 'help_block'
           element = :p
-          klass = 'help-block'
+          extra_classes = @field_options[:help_block_class]
+          klass = "help-block #{extra_classes}"
         when 'append', 'prepend'
           element = :span
           klass = 'add-on'

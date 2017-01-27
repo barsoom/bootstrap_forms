@@ -135,7 +135,11 @@ You can add as many options to any form helper tag. If they are interpreted by B
   <tr>
     <th>help_block</th>
     <td>Add block help text (below)</td>
-    <td>= f.text_field :name, :help_block => 'help me!'</td>
+    <td>
+      = f.text_field :name, :help_block => 'help me!'
+
+      = f.text_field :name, :help_block => 'help me!', :help_block_class => 'extra_classes can_go_here'
+  </td>
   </tr>
   <tr>
     <th>error</th>
