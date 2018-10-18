@@ -7,7 +7,18 @@ module BootstrapForms
         content_tag(:div, :class => 'alert alert-block alert-error validation-errors') do
           content_tag(:h4, I18n.t('bootstrap_forms.errors.header', :model => object.class.model_name.human), :class => 'alert-heading') +
           content_tag(:ul) do
-            object.errors.full_messages.map do |message|
+
+            # Checking for uppercase helps with nested attributes, where we'd otherwise prepend the attribute name unnecessarily sometimes, e.g. "Bank code Sort code is invalid".
+            messages = object.errors.map { |attribute, message|
+              first_letter_of_message_is_uppercase = message.match?(/\A[[:upper:]]/)
+              if first_letter_of_message_is_uppercase
+                message
+              else
+                full_message(attribute, message)
+              end
+            }.uniq
+
+            messages.map do |message|
               content_tag(:li, message)
             end.join('').html_safe
           end
