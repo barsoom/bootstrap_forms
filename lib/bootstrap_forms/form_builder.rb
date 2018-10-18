@@ -165,7 +165,12 @@ module BootstrapForms
       errors = object.errors[@name]
       if errors.present?
         errors.map { |e|
-          "#{human_attribute_name} #{e}"
+          first_letter_of_message_is_uppercase = e.match?(/\A[[:upper:]]/)
+          if first_letter_of_message_is_uppercase
+            e
+          else
+            "#{human_attribute_name} #{e}"
+          end
         }.join(", ")
       end
     end
