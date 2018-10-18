@@ -14,7 +14,7 @@ module BootstrapForms
               if first_letter_of_message_is_uppercase
                 message
               else
-                full_message(attribute, message)
+                object.errors.full_message(attribute, message)
               end
             }.uniq
 
