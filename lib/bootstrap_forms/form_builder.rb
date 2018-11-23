@@ -72,7 +72,7 @@ module BootstrapForms
             label("#{@name}_#{value}", :class => [ 'radio', required_class ].compact.join(' ')) do
               extras { radio_button(name, value, @field_options) + text }
             end
-          end.join.html_safe
+          end.join(" ").html_safe
         end
       end
     end
