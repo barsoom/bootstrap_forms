@@ -92,7 +92,7 @@ module BootstrapForms
               content_tag(:label, :class => ['checkbox', ('inline' if @field_options[:inline])].compact.join(' ')) do
                 checkbox + content_tag(:span, record.send(record_name))
               end
-            end.join('').html_safe
+            end.join(" ").html_safe
           end
         end
       end
@@ -113,7 +113,7 @@ module BootstrapForms
               content_tag(:label, :class => ['radio', ('inline' if @field_options[:inline])].compact.join(' ')) do
                 radiobutton + content_tag(:span, record.send(record_name))
               end
-            end.join('').html_safe
+            end.join(" ").html_safe
           end
         end
       end
