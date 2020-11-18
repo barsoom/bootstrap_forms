@@ -10,13 +10,17 @@ module BootstrapForms
 
             # Checking for uppercase helps with nested attributes, where we'd otherwise prepend the attribute name unnecessarily sometimes, e.g. "Bank code Sort code is invalid".
             messages = object.errors.map { |attribute, message|
-              first_letter_of_message_is_uppercase = message.match?(/\A[[:upper:]]/)
-              if first_letter_of_message_is_uppercase
-                message
+              case message
+              when Hash
+                message.map { |nested_attribute, nested_message|
+                  format_error(object, nested_attribute, nested_message)
+                }
+              when String
+                format_error(object, attribute, message)
               else
-                object.errors.full_message(attribute, message)
+                raise "Unexpected type: #{message.class.name}"
               end
-            }.uniq
+            }.flatten.uniq
 
             messages.map do |message|
               content_tag(:li, message)
@@ -228,6 +232,16 @@ module BootstrapForms
 
     def objectify_options(options)
       super.except(:label, :help_inline, :error, :success, :warning, :help_block, :prepend, :append)
+    end
+
+    def format_error(object, attribute, message)
+      first_letter_of_message_is_uppercase = message.match?(/\A[[:upper:]]/)
+
+      if first_letter_of_message_is_uppercase
+        message
+      else
+        object.errors.full_message(attribute, message)
+      end
     end
   end
 end
