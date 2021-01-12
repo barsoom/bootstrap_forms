@@ -7,20 +7,36 @@ module BootstrapForms
         content_tag(:div, :class => 'alert alert-block alert-error validation-errors') do
           content_tag(:h4, I18n.t('bootstrap_forms.errors.header', :model => object.class.model_name.human), :class => 'alert-heading') +
           content_tag(:ul) do
-            messages = object.errors.map { |attribute, message|
-              case message
-              when Hash
-                message.map { |nested_attribute, nested_message|
-                  format_error(object, nested_attribute, nested_message)
+            messages =
+              if Gem::Version.new(Rails.version) < Gem::Version.new("6.1")
+                object.errors.map { |attribute, message|
+                  case message
+                  when Hash
+                    message.map { |nested_attribute, nested_message|
+                      format_error(object, nested_attribute, nested_message)
+                    }
+                  when String
+                    format_error(object, attribute, message)
+                  else
+                    raise "Unexpected type: #{message.class.name}"
+                  end
                 }
-              when String
-                format_error(object, attribute, message)
               else
-                raise "Unexpected type: #{message.class.name}"
+                object.errors.map { |error|
+                  case error.message
+                  when Hash
+                    error.message.map { |nested_attribute, nested_message|
+                      format_error(object, nested_attribute, nested_message)
+                    }
+                  when String
+                    format_error(object, error.attribute, error.message)
+                  else
+                    raise "Unexpected type: #{error.message.class.name}"
+                  end
+                }
               end
-            }.flatten.uniq
 
-            messages.map do |message|
+            messages.flatten.uniq.map do |message|
               content_tag(:li, message)
             end.join('').html_safe
           end
